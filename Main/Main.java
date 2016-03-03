@@ -1,4 +1,7 @@
 import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.Scanner;
 
 public class Main {
@@ -20,6 +23,7 @@ public class Main {
 	private static final int dx[] = { 0, 1, 0, -1 };
 	private static final int dy[] = { 1, 0, -1, 0 };
 	private static final String ds[] = { "L", "U", "R", "D" };
+	private int[] trs , tcs;
 	int point, map_row, map_col;
 	boolean[][] map, itemMap;
 
@@ -48,6 +52,9 @@ public class Main {
 			n = sc.nextInt();
 			int rows[] = new int[n];
 			int cols[] = new int[n];
+			trs = new int[n];
+			tcs = new int[n];
+			
 			for (int i = 0; i < n; ++i) {
 				int id = sc.nextInt(), row = sc.nextInt(), col = sc.nextInt();
 				rows[i] = row;
@@ -71,7 +78,7 @@ public class Main {
 			}
 			res.append(rows.length).append("\n");
 			for (int i = 0; i < rows.length; ++i) {
-				res.append(order(rows[i], cols[i])).append("\n");
+				res.append(order(i, rows[i], cols[i])).append("\n");
 			}
 		}
 		{
@@ -99,19 +106,25 @@ public class Main {
 		return res.toString();
 	}
 
-	String order(final int row, final int col) {
+	String order(int charNum, final int row, final int col) {
+		//row, col characterの位置
+		//map上の点
 		int dist[][] = new int[map_row][map_col];
+		//初期化
 		for (int i = 0; i < dist.length; ++i)
 			Arrays.fill(dist[i], Integer.MAX_VALUE);
+		//characterの位置の初期化
 		dist[row][col] = 0;
 		int qr[] = new int[map_row * map_col], qc[] = new int[map_row * map_col], qi = 0, qe = 1;
 		qr[0] = row;
 		qc[0] = col;
 		while (qi < qe) {
+			// 座標点の集合
 			int r = qr[qi], c = qc[qi];
 			++qi;
 			for (int i = 0; i < 4; ++i) {
 				int nr = r + dx[i], nc = c + dy[i];
+				//地図上で進めるところ、かつまだ計算してないところを探して、道のりを入れる
 				if (map[nr][nc] && dist[nr][nc] == Integer.MAX_VALUE) {
 					dist[nr][nc] = dist[r][c] + 1;
 					qr[qe] = nr;
@@ -121,20 +134,27 @@ public class Main {
 			}
 		}
 
+		// アイテムまで一番近いところを探す
 		int tr = -1, tc = -1, tdist = Integer.MAX_VALUE;
 		for (int r = 0; r < map_row; ++r) {
 			for (int c = 0; c < map_col; ++c) {
 				if (itemMap[r][c] && tdist > dist[r][c]) {
-					tdist = dist[r][c];
-					tr = r;
-					tc = c;
+					if (charNum == 0 || checkOtherTarget(r, c)) {
+						tdist = dist[r][c];
+						tr = r;
+						tc = c;
+					}
 				}
 			}
 		}
 
+		//一番近い点までの道のりを探す
 		StringBuilder res = new StringBuilder();
+		
 		if (tdist != Integer.MAX_VALUE) {
 			while (dist[tr][tc] > 0) {
+				trs[charNum] = tr;
+				tcs[charNum] = tc;
 				for (int i = 0; i < 4; ++i) {
 					int nr = tr + dx[i], nc = tc + dy[i];
 					if (dist[tr][tc] > dist[nr][nc]) {
@@ -146,7 +166,22 @@ public class Main {
 				}
 			}
 		}
+		
 		String s = res.reverse().toString();
 		return s.length() <= 2 ? s : s.substring(0, 2);
+	}
+	
+	private Map<String, String> getFirePoint() {
+		Map<String, String> point = new HashMap<String, String>();
+		return point;
+	}
+	
+	private boolean checkOtherTarget(int tr, int tc){
+		for (int i = 0; i < trs.length; i ++) {
+			if (trs[i] == tr && tcs[i] == tc) {
+				return false;
+			}
+		}
+		return true;
 	}
 }
